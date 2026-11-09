@@ -1,0 +1,224 @@
+---
+title: "Main Figure 1 — source data, statistics and panel reproduction"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE,
+                      fig.width = 7, fig.height = 4.5, dpi = 300,
+                      fig.path = "figure/")
+library(readr); library(readxl); library(dplyr); library(tidyr)
+library(ggplot2); library(ggpubr); library(patchwork); library(scales)
+has_pheatmap <- requireNamespace("pheatmap", quietly = TRUE)
+source("../script/theme_pub.R")
+source("../script/utils_stats.R")
+```
+
+All source files below are the **original exported tables** deposited in this folder. Knit this file with `rmarkdown::render('fig1/fig1.Rmd')`; the knitted `fig1.html` is committed alongside.
+
+> Note on significance marks: the code recomputes p-values from the deposited values using the tests stated in each section. If the published panel used a different test, covariate adjustment or a larger cohort, replace the `method =` argument in the corresponding section; do not overwrite the source values.
+
+## Panel A — serum SCFA (Study 2)
+
+```{r F1A, fig.cap="A. Serum acetate, propionate and butyrate, Healthy vs T2D."}
+d <- read_csv("F1A_serum_SCFA.csv", show_col_types = FALSE)
+d$group <- factor(d$group, levels = c("Healthy", "T2D"))
+p <- ggplot(d, aes(scfa, concentration_umol_L, fill = group)) +
+  geom_boxplot(width = 0.6, alpha = 0.35, outlier.shape = NA) +
+  geom_point(position = position_jitterdodge(jitter.width = 0.08, dodge.width = 0.6), size = 1.8) +
+  scale_fill_manual(values = group_cols) +
+  labs(x = NULL, y = expression("SCFA in serum (" * mu * "mol/L)"), fill = NULL) +
+  theme_pub()
+print(p + stat_compare_means(aes(group = group), method = "wilcox.test",
+                             label = "p.signif", size = 4))
+```
+
+## Panel B — MR assumptions diagram (image only)
+
+Schematic panel. The editable source is `F1B.ai` (see `F1_image_panels_manifest.csv` and `raw_images/`). No numerical source data.
+
+## Panel C — Mendelian randomisation forest plot
+
+```{r F1C, fig.cap="C. MR beta with 95% CI, DIAGRAM and UK Biobank."}
+d <- read_csv("F1C_MR_beta.csv", show_col_types = FALSE)
+d$term   <- paste(d$dataset, d$outcome, sep = " / ")
+d$stars  <- pvalue_stars(d$pvalue)
+ggplot(d, aes(beta, reorder(term, beta))) +
+  geom_vline(xintercept = 0, linetype = 2, colour = "grey50") +
+  geom_pointrange(aes(xmin = ci_low, xmax = ci_high, colour = dataset), size = 0.7) +
+  geom_text(aes(x = ci_high, label = stars), hjust = -0.4, size = 3.6) +
+  scale_x_continuous(expand = expansion(mult = c(0.15, 0.25))) +
+  facet_wrap(~ dataset, scales = "free_y", ncol = 1) +
+  labs(x = "Beta (95% CI)", y = NULL, caption = paste("Method column:", paste(unique(d$method), collapse = ", "))) +
+  theme_pub()
+```
+
+> The `method` column still reads `IVW (specify)` — replace it in the CSV with the exact MR method (e.g. IVW fixed / random effects, MR-Egger) before submission.
+
+## Panel D — isotope tracing schematic (image only)
+
+Schematic panel, editable source `F1D.ai`. No numerical source data.
+
+## Panel E — isotopologue heatmap (db/db vs db/m)
+
+```{r F1E, fig.width=7, fig.height=7, fig.cap="E. Isotopologue abundance heatmap."}
+m <- as.matrix(read.csv("F1E_isotopologue_heatmap.csv", row.names = 1,
+                        check.names = FALSE, fileEncoding = "UTF-8-BOM"))
+# The deposited values are already row-scaled (z-score-like); plot them directly.
+cols <- colorRampPalette(c("#2B4C8C", "white", "#D9433F"))(101)
+if (has_pheatmap) {
+  pheatmap::pheatmap(m, color = cols, cluster_rows = TRUE, cluster_cols = FALSE,
+                     fontsize_row = 7, fontsize_col = 8,
+                     main = "Isotopologue abundance (row-scaled values as deposited)")
+} else {
+  heatmap(m, col = cols, Colv = NA, margins = c(9, 9))
+}
+```
+
+## Panel F — glucose+1 / glucose+3
+
+```{r F1F, fig.cap="F. Glucose M+1 and M+3 in db/m vs db/db."}
+w <- read.csv("F1F_glucose_isotopologues.csv", check.names = FALSE,
+              stringsAsFactors = FALSE)
+long <- data.frame(sample = w[[1]], genotype = sub("-.*$", "", w[[1]]),
+                   g1 = w[["glucose+1"]], g3 = w[["glucose+3"]]) %>%
+  pivot_longer(cols = c(g1, g3), names_to = "isotopologue", values_to = "value") %>%
+  mutate(isotopologue = recode(isotopologue, g1 = "glucose+1", g3 = "glucose+3"))
+long$genotype <- factor(long$genotype, levels = c("db/m", "db/db"))
+p <- ggplot(long, aes(genotype, value, fill = genotype)) +
+  geom_boxplot(width = 0.55, alpha = 0.35, outlier.shape = NA) +
+  geom_point(position = position_jitter(0.1), size = 1.8) +
+  scale_fill_manual(values = group_cols) +
+  facet_wrap(~ isotopologue, scales = "free_y") +
+  labs(x = NULL, y = "Value") + theme_pub()
+print(p + stat_compare_means(aes(group = genotype), method = "wilcox.test",
+                             label = "p.signif", size = 4))
+```
+
+## Panel G — treatment timeline (image only)
+
+Schematic panel, editable source `F1G.ai`. No numerical source data.
+
+## Panel H — fasting glucose
+
+```{r F1H, fig.cap="H. Fasting blood glucose, Ctr vs NaP."}
+d <- read_csv("F1H_fasting_glucose.csv", show_col_types = FALSE)
+s   <- summarise_mean_sd(d, "fasting_glucose_mmol_L", group)
+res <- compare_two(d$fasting_glucose_mmol_L, d$group, method = "t.test")
+ggplot(d, aes(group, fasting_glucose_mmol_L, colour = group)) +
+  geom_point(position = position_jitter(0.12), size = 2.5) +
+  geom_errorbar(data = s, aes(x = group, y = mean, ymin = mean - sd, ymax = mean + sd),
+                width = 0.12, inherit.aes = FALSE) +
+  geom_point(data = s, aes(x = group, y = mean), size = 4, inherit.aes = FALSE) +
+  scale_color_manual(values = group_cols) +
+  labs(x = NULL, y = "Fasting blood glucose (mmol/L)",
+       title = sprintf("t-test: p = %.4g (%s)", res$p, res$stars)) +
+  theme_pub()
+```
+
+## Panel I — PTT time course (0–120 min)
+
+```{r F1I, fig.cap="I. Pyruvate tolerance test, 0-120 min."}
+w <- read.csv("F1I_PTT_curve.csv", header = FALSE, check.names = FALSE,
+              stringsAsFactors = FALSE, na.strings = c("", "NA"))
+# Row 2 of the wide table holds the six time points; rows 3+ hold one mouse per row.
+tp   <- as.numeric(unlist(w[2, 2:7], use.names = FALSE)); tp <- tp[!is.na(tp)]
+body <- w[-(1:2), , drop = FALSE]
+long <- do.call(rbind, lapply(seq_len(nrow(body)), function(i) {
+  data.frame(group = body[i, 1], mouse_id = paste0(body[i, 1], "_", sprintf("%02d", i)),
+             time_min = tp,
+             blood_glucose_mmol_L = as.numeric(unlist(body[i, 2:(1 + length(tp))], use.names = FALSE)))
+}))
+s <- long %>% group_by(group, time_min) %>%
+  summarise(mean = mean(blood_glucose_mmol_L, na.rm = TRUE),
+            sem  = sd(blood_glucose_mmol_L, na.rm = TRUE) / sqrt(n()), .groups = "drop")
+tests <- do.call(rbind, lapply(tp, function(t) {
+  dd <- filter(long, time_min == t)
+  data.frame(time_min = t,
+             p = tryCatch(t.test(blood_glucose_mmol_L ~ group, data = dd)$p.value,
+                          error = function(e) NA_real_))
+}))
+tests$stars <- pvalue_stars(tests$p)
+print(tests)
+ggplot(s, aes(time_min, mean, colour = group, group = group)) +
+  geom_errorbar(aes(ymin = mean - sem, ymax = mean + sem), width = 3) +
+  geom_line(linewidth = 0.8) + geom_point(size = 2.2) +
+  scale_color_manual(values = group_cols) +
+  labs(x = "Time (min)", y = "Blood glucose (mmol/L)") + theme_pub()
+```
+
+## Panels J, K, L — histology, blot and workflow (image only)
+
+These panels are reproduced from the **uncropped originals** listed in `F1_image_panels_manifest.csv` (`F1J.tif`, `F1K.tif`, `F1L.ai` etc.) and stored in `raw_images/`. No densitometry table was supplied for the Kpr/Actin blot; if the journal requires a quantified source table, deposit it as `F1K_Kpr_blot_quant.csv` and add a plotting chunk here.
+
+```{r F1_images}
+knitr::kable(read_csv("F1_image_panels_manifest.csv", show_col_types = FALSE))
+```
+
+## Panel M — LFQ intensity distribution (Proteome vs Propionylome)
+
+```{r F1M, fig.cap="M. Log10 LFQ intensity distribution."}
+pr <- read_excel("F1M_LFQ_distribution.xlsx", sheet = "Proteome")
+kp <- read_excel("F1M_LFQ_distribution.xlsx", sheet = "kpr")
+d <- bind_rows(
+  data.frame(ome = "Proteome",      log10Intensity = suppressWarnings(as.numeric(pr[["log10Intensity"]]))),
+  data.frame(ome = "Propionylome",  log10Intensity = suppressWarnings(as.numeric(kp[["log10Intensity"]])))
+) %>% filter(is.finite(log10Intensity))
+ggplot(d, aes(log10Intensity, fill = ome)) +
+  geom_histogram(position = "identity", alpha = 0.55, bins = 60, colour = "grey30") +
+  scale_fill_manual(values = group_cols) +
+  labs(x = expression(Log[10] * " LFQ intensity"), y = "Count", fill = NULL) +
+  theme_pub()
+```
+
+## Panel N — sites per ratio quartile
+
+```{r F1N, fig.cap="N. Site counts and -log10(p) for the deposited quartiles."}
+d <- read_csv("F1N_ratio_quartile_sites.csv", show_col_types = FALSE) %>%
+  mutate(minus_log10_p = -log10(suppressWarnings(as.numeric(`Lactating/Neonatal P value`))))
+cnt <- count(d, `Regulated Type`, name = "n_sites")
+print(cnt)
+p1 <- ggplot(cnt, aes(`Regulated Type`, n_sites, fill = `Regulated Type`)) +
+  geom_col(width = 0.55, alpha = 0.85) +
+  geom_text(aes(label = n_sites), vjust = -0.4, size = 3.5) +
+  labs(x = NULL, y = "Number of sites", fill = NULL) + theme_pub()
+p2 <- ggplot(d, aes(`Regulated Type`, minus_log10_p)) +
+  geom_boxplot(alpha = 0.4, outlier.size = 0.6) +
+  labs(x = NULL, y = expression(-log[10] * " p")) + theme_pub()
+print(p1 / p2 + plot_layout(heights = c(2, 3)))
+```
+
+> The deposited site table contains **Q1 and Q4 only** (93 and 132 sites). If the published panel also shows Q2/Q3 counts, export those rows and re-knit.
+
+## Panel O — KEGG enrichment, Q1 vs Q4
+
+```{r F1O, fig.height=8, fig.width=8, fig.cap="O. KEGG enrichment of Q1 and Q4 quartiles."}
+f <- "F1O_KEGG_enrichment.xlsx"
+enr <- bind_rows(
+  read_excel(f, sheet = "Q1") %>% mutate(quartile = "Q1"),
+  read_excel(f, sheet = "Q4") %>% mutate(quartile = "Q4")
+) %>% mutate(
+  minus_log10_p = suppressWarnings(as.numeric(`-log10(p value)`)),
+  p             = suppressWarnings(as.numeric(`Fisher's exact test p value`)),
+  stars         = pvalue_stars(p),
+  pathway       = sub("^map[0-9]+\\s+", "", `KEGG pathway`)
+) %>% filter(is.finite(minus_log10_p))
+top <- enr %>% group_by(quartile) %>% slice_max(minus_log10_p, n = 20) %>% ungroup()
+ggplot(top, aes(quartile, reorder(pathway, minus_log10_p))) +
+  geom_tile(aes(fill = minus_log10_p), colour = "grey90") +
+  geom_text(aes(label = stars), size = 3) +
+  scale_fill_gradient(low = "#E8EEF8", high = "#2B4C8C") +
+  labs(x = NULL, y = NULL, fill = "-log10(p)") + theme_pub() +
+  theme(axis.text.y = element_text(size = 6))
+```
+
+> Only the `Q1` and `Q4` sheets contain enrichment rows; the `Q2`, `Q3` sheets are header-only in the deposited workbook. `Q1/Q4 Pathway2Protein` sheets contain the underlying site-level mapping and are part of the same source file.
+
+```{r sessionInfo}
+sessionInfo()
+```

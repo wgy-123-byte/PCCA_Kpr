@@ -1,0 +1,17 @@
+panel,content,file_name,file_type,requirement
+C,Kpr levels of the Flag-PCCA/ALDH2/PCCB constructs,F2C.tif,TIFF,Uncropped blot
+D,PCCA Kpr in liver tissue of db/m and db/db mice ,F2D.tif,TIFF,Uncropped blots
+E,PCCA Kpr level in liver tissue of db/db mice with or without NaP ,F2E.tif,TIFF,Uncropped blots
+F,PCCA protein level in liver tissues of db/m and db/db mice,F2F.tif,TIFF,Uncropped blot
+G,PCCA protein level in BH cells after CHX alone or combined with NaP (5 mM),F2G.tif,TIFF,Uncropped blot
+H,The binding of HA-Ub to PCCA,F2H.tif,TIFF,Uncropped blot
+I,PCCA Kpr level after knocking down indicated acetyltransferases in HEK293T cells,F2I.tif,TIFF,Uncropped blot
+J,PCCA Kpr level after knocking down corresponding sirtuins (SIRTs) in HEK293T cells,F2J.tif,TIFF,Uncropped blots
+K,The binding of HA-Ub to PCCA after knocking down p300,F2K.tif,TIFF,Uncropped blot
+L,PCCA protein level in p300-depleted BH cells after CHX treatment,F2L.tif,TIFF,Uncropped blot
+M,The binding of HA-Ub to PCCA after knocking down SIRT1,F2M.tif,TIFF,Uncropped blot
+N,PCCA protein level in SIRT1-overexpressed BH cells after CHX treatment,F2N.tif,TIFF,Uncropped blot
+Q,PCCA (Bos taurus) domain / lysine site map,F2Q.ai,AI/SVG/PDF,Editable source
+R,PCCA Kpr level of Flag-PCCA wild-type (WT) or the indicated lysine mutant plasmid,F2R.tif,TIFF,Uncropped blot
+S,The binding of HA-Ub to Flag-PCCA WT or the Flag-PCCA K39R,F2S.tif,TIFF,Uncropped blot
+T,PCCA protein level of Flag-PCCA WT or the Flag-PCCA K39R in BH cells after CHX treatment,F2T.tif,TIFF,Uncropped blot

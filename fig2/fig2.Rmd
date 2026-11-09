@@ -1,0 +1,128 @@
+---
+title: "Main Figure 2 — source data, statistics and panel reproduction"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE,
+                      fig.width = 7, fig.height = 4.5, dpi = 300,
+                      fig.path = "figure/")
+library(readr); library(readxl); library(dplyr); library(tidyr)
+library(ggplot2); library(ggpubr); library(patchwork); library(scales)
+source("../script/theme_pub.R")
+source("../script/utils_stats.R")
+# Match by panel prefix: the supplied file names contain double spaces in
+# different positions, so hard-coding the full name is fragile.
+pick <- function(prefix) {
+  f <- list.files(".", pattern = paste0("^", prefix))
+  if (length(f) != 1) stop(paste("Expected exactly 1 file starting with", prefix,
+                                 "but found", length(f)))
+  f
+}
+read_wide <- function(f) {
+  w <- read.csv(f, check.names = FALSE, stringsAsFactors = FALSE)
+  pivot_longer(w, cols = -replicate, names_to = "group",
+               values_to = "relative_glucose_concentration")
+}
+```
+
+All source files below are the **original exported tables** deposited in this folder. Knit with `rmarkdown::render('fig2/fig2.Rmd')`; the knitted `fig2.html` is committed alongside.
+
+> Note on significance marks: p-values are recomputed from the deposited replicates. If the published panel used a different test or normalisation, replace the test in the corresponding section; do not overwrite the source values.
+
+## Panel A — KEGG pathway interest size
+
+```{r F2A, fig.cap="A. Interest size (number of related genes) per KEGG pathway."}
+d <- read.csv("F2A_pathway_interest_size.csv", fileEncoding = "UTF-8-BOM",
+              check.names = FALSE, stringsAsFactors = FALSE)
+d <- d[, 1:2]; names(d) <- c("pathway", "genes")
+d$n_genes      <- lengths(strsplit(as.character(d$genes), "\\s*,\\s*"))
+d$pathway_short <- sub("^map[0-9]+\\s+", "", d$pathway)
+print(d[, c("pathway_short", "n_genes")], row.names = FALSE)
+ggplot(d, aes(reorder(pathway_short, n_genes), n_genes)) +
+  geom_col(fill = "#E86A62", width = 0.7) +
+  geom_text(aes(label = n_genes), hjust = -0.25, size = 3.5) +
+  coord_flip() + scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
+  labs(x = NULL, y = "Interest size (related genes)") + theme_pub()
+```
+
+> The deposited table lists one gene set per pathway; interest size is the number of genes in `Related Genes` (33, 25, 30, 31, 20, 18, 19, 19). If the published panel shows a second (grey) series, deposit that second table and extend this chunk — do not invent values.
+
+## Panel B — propionylation sites per protein
+
+```{r F2B, fig.cap="B. Number of Kpr sites per protein."}
+d <- read_csv("F2B_Kpr_sites_per_protein.csv", show_col_types = FALSE)
+cnt <- d %>% count(`Gene name`, name = "n_sites") %>% arrange(desc(n_sites))
+print(cnt, n = Inf)
+p <- ggplot(cnt, aes(reorder(`Gene name`, n_sites), n_sites, fill = n_sites)) +
+  geom_col(width = 0.82) + coord_polar(theta = "x") +
+  scale_fill_gradient(low = "#F6C6A8", high = "#7B2B6B") +
+  labs(x = NULL, y = NULL, fill = "sites") + theme_pub()
+print(p)
+```
+
+## Panels C–N, Q–T — immunoblots and the PCCA domain map (image only)
+
+Panels C–N, Q–T are reproduced from the **uncropped originals / editable sources** listed in `F2_image_panels_manifest.csv` (`F2C.tif` … `F2T.tif`, `F2Q.ai`) and stored in `raw_images/`. No densitometry or half-life tables were supplied for these panels; if the journal requires them, deposit a CSV per panel and add a plotting chunk here.
+
+```{r F2_images}
+knitr::kable(read_csv("F2_image_panels_manifest.csv", show_col_types = FALSE))
+```
+
+## Panel O — relative glucose concentration, p300 knockdown
+
+```{r F2O, fig.cap="O. Relative glucose concentration, Ctr/NaP NC vs NaP sip300."}
+d <- read_wide(pick("F2O_"))
+p <- ggplot(d, aes(group, relative_glucose_concentration, colour = group)) +
+  geom_point(position = position_jitter(0.1), size = 2.6) +
+  stat_summary(fun = mean, geom = "point", size = 4, shape = 20) +
+  stat_summary(fun.data = mean_sd_fun, geom = "errorbar", width = 0.12) +
+  labs(x = NULL, y = "Relative glucose concentration", title = "Panel O") +
+  theme_pub() + theme(legend.position = "none")
+print(p + stat_compare_means(method = "anova", size = 3.5))
+anova_tab <- aov(relative_glucose_concentration ~ group, data = d)
+print(summary(anova_tab))
+```
+
+## Panel P — relative glucose concentration, SIRT1 knockdown
+
+```{r F2P, fig.cap="P. Relative glucose concentration, Ctr/NaP NC vs NaP siSIRT1."}
+# v3: the corrected source table now uses the group label NaP_siSIRT1.
+d <- read_wide(pick("F2P_"))
+p <- ggplot(d, aes(group, relative_glucose_concentration, colour = group)) +
+  geom_point(position = position_jitter(0.1), size = 2.6) +
+  stat_summary(fun = mean, geom = "point", size = 4, shape = 20) +
+  stat_summary(fun.data = mean_sd_fun, geom = "errorbar", width = 0.12) +
+  labs(x = NULL, y = "Relative glucose concentration", title = "Panel P") +
+  theme_pub() + theme(legend.position = "none")
+print(p + stat_compare_means(method = "anova", size = 3.5))
+print(summary(aov(relative_glucose_concentration ~ group, data = d)))
+```
+
+## Panel R — K→R mutant Kpr levels (image only)
+
+See `F2R.tif` in `raw_images/`; no densitometry table was supplied.
+
+## Panel U — relative glucose concentration, WT vs K39R
+
+```{r F2U, fig.cap="U. Relative glucose concentration, Flag-PCCA WT vs K39R."}
+d <- read_wide(pick("F2U_"))
+res <- compare_two(d$relative_glucose_concentration, d$group, method = "t.test")
+p <- ggplot(d, aes(group, relative_glucose_concentration, colour = group)) +
+  geom_point(position = position_jitter(0.1), size = 2.6) +
+  stat_summary(fun = mean, geom = "point", size = 4, shape = 20) +
+  stat_summary(fun.data = mean_sd_fun, geom = "errorbar", width = 0.12) +
+  labs(x = NULL, y = "Relative glucose concentration",
+       title = sprintf("t-test: p = %.4g (%s)", res$p, res$stars)) +
+  theme_pub() + theme(legend.position = "none")
+print(p)
+```
+
+```{r sessionInfo}
+sessionInfo()
+```

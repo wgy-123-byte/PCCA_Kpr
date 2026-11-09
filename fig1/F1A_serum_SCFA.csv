@@ -1,0 +1,19 @@
+sample_id,study,group,scfa,concentration_umol_L
+H001,Study 2,Healthy,Acetate,28.6
+H002,Study 2,Healthy,Acetate,38.1
+H003,Study 2,Healthy,Acetate,21
+T001,Study 2,T2D,Acetate,27.7
+T002,Study 2,T2D,Acetate,36.9
+T003,Study 2,T2D,Acetate,20.8
+H001,Study 2,Healthy,Propionate,3.4
+H002,Study 2,Healthy,Propionate,4.1
+H003,Study 2,Healthy,Propionate,2.1
+T001,Study 2,T2D,Propionate,3.6
+T002,Study 2,T2D,Propionate,4.5
+T003,Study 2,T2D,Propionate,2.4
+H001,Study 2,Healthy,Butyrate,11.4
+H002,Study 2,Healthy,Butyrate,14.2
+H003,Study 2,Healthy,Butyrate,1.6
+T001,Study 2,T2D,Butyrate,11.3
+T002,Study 2,T2D,Butyrate,14
+T003,Study 2,T2D,Butyrate,1.4

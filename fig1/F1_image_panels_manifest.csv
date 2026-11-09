@@ -1,0 +1,7 @@
+panel,content,file_name,file_type,requirement
+B,Mendelian randomisation assumption diagram (SNP -> SCFA -> T2D),F1B.ai,AI/SVG/PDF,Editable source
+D,13C-propionate tracing / TCA cycle isotope flow,F1D.ai,AI/SVG/PDF,Editable source
+G,db/db PTT + NaP treatment timeline (day 6 -> 13),F1G.ai,AI/SVG/PDF,Editable source
+J,"H&E and Oil Red O staining, Ctr vs NaP, 50 um scale bar",F1J.tif,TIFF,Uncropped originals with scale bar
+K,"Anti-Kpr and Actin immunoblot, Neonatal 1-3# vs Lactating 1-3#",F1K.tif,TIFF,"Uncropped blot, marker visible"
+L,Cattle liver sample collection -> LC-MS/MS propionylome workflow,F1L.ai,AI/SVG/PDF,Editable source
